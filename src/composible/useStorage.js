@@ -1,7 +1,8 @@
 // useStorage.js
-import { getStorage, ref as RefFile, uploadBytes, getDownloadURL } from "firebase/storage";
+import { getStorage, ref as RefFile, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 import getUser from "./getUser";
-import { ref as toRef } from "vue"
+import { ref as toRef } from "vue";
+
 const { user } = getUser();
 const storage = getStorage();
 
@@ -23,7 +24,23 @@ const useStorage = () => {
             filePath.value = null;
         }
     };
-    return { uploadImage, error, filePath, url };
+
+    const deleteImage = async () => {
+        if (url.value && filePath.value) {
+            const storageRef = RefFile(storage, filePath.value);
+            try {
+                await deleteObject(storageRef);
+                // Clear values after successful deletion
+                url.value = null;
+                filePath.value = null;
+            } catch (deleteError) {
+                console.error("Error deleting file:", deleteError);
+                error.value = deleteError.message;
+            }
+        }
+    };
+
+    return { uploadImage, deleteImage, error, filePath, url };
 };
 
 export default useStorage;

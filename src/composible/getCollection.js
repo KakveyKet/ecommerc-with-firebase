@@ -6,9 +6,7 @@ const getCollections = (collectionName) => {
     const error = ref(null);
     const documents = ref([]);
     const isPending = ref(true);
-
     const collectionRef = collection(projectFirestore, collectionName);
-
     const unsubscribe = onSnapshot(
         collectionRef,
         (snapshot) => {

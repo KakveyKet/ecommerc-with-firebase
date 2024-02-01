@@ -1,7 +1,8 @@
 <template>
-  <div>
-    <Navbar />
-    <Footer />
+  <div class="flex flex-col h-screen">
+    <div><Navbar /></div>
+    <div class="mb-auto">Home</div>
+    <div><Footer /></div>
   </div>
 </template>
 
@@ -13,5 +14,10 @@ export default {
     Navbar,
     Footer,
   },
+  setup() {
+    return {};
+  },
 };
 </script>
+
+<style lang="scss" scoped></style>

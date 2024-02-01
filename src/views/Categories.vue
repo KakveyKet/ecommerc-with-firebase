@@ -6,7 +6,8 @@
       </div>
     </div>
     <div class="mb-auto w-11/12 sm:w-full mx-auto">
-      <h1>Categories</h1>
+      <component :is="currentComponent" @close="currentComponent = ''" />
+      <h1 class="text-md text-blue-700 ml-5 mt-2">Categories</h1>
       <div
         class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 mx-auto gap-5 m-5"
       >
@@ -15,16 +16,21 @@
           v-for="catagory in documents"
           :key="catagory.id"
         >
-          <img
-            class="w-full h-full object-cover object-center rounded-md"
-            :src="catagory.url"
-          />
+          <router-link
+            :to="{ name: 'categorydetails', params: { id: catagory.id } }"
+          >
+            <img
+              class="w-full h-full object-cover object-center rounded-md"
+              :src="catagory.url"
+          /></router-link>
+
           <h4
-            class="bg-indigo-700 rounded-md absolute top-1 text-white text-center w-24 font-serif p-1"
+            class="bg-indigo-700 rounded-md absolute top-1 text-white text-center left-1 w-24 font-serif p-1"
           >
             {{ catagory.name }}
           </h4>
           <button
+            @click="handleRemoveCatgory"
             class="absolute bottom-0 right-0 text-pink-600 hover:text-pink-800 font-serif font-black"
           >
             Remove
@@ -45,15 +51,25 @@
 import Navbar from "@/components/Navbar.vue";
 import Footer from "@/components/Footer.vue";
 import getCollections from "@/composible/getCollection";
+import DeleteConfirmation from "./DeleteConfirmation.vue";
+import { ref } from "vue";
+
 export default {
   components: {
     Navbar,
     Footer,
+    DeleteConfirmation,
   },
   setup() {
     const { error, isPending, documents } = getCollections("inventory");
+    const currentComponent = ref("");
+    const handleRemoveCatgory = () => {
+      currentComponent.value = "DeleteConfirmation";
+    };
     return {
       documents,
+      currentComponent,
+      handleRemoveCatgory,
     };
   },
 };

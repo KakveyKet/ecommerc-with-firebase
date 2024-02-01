@@ -56,20 +56,27 @@
       <!-- dropdown -->
 
       <div
-        class="absolute hidden group-hover:block bg-white w-96 top-10 h-96 shadow hover:shadow-sm"
+        class="absolute hidden group-hover:block bg-white w-96 top-10 h-96 shadow hover:shadow-sm z-50"
       >
-        <p
-          class="text-gray-400 hover:text-indigo-700 duration-300 border-b-2 border-indigo-100 px-5 py-3"
+        <router-link
           v-for="category in categories"
           :key="category"
+          :to="{ name: 'categorydetails', params: { id: category.id } }"
         >
-          {{ category.name }}
-        </p>
-        <p
-          class="text-gray-400 hover:text-indigo-700 duration-300 border-b-2 border-indigo-100 px-5 py-3"
+          <p
+            class="text-gray-400 hover:text-indigo-700 duration-300 border-b-2 border-indigo-100 px-5 py-3"
+          >
+            {{ category.name }}
+          </p></router-link
         >
-          All Category
-        </p>
+
+        <router-link :to="{ name: 'category' }">
+          <p
+            class="text-gray-400 hover:text-indigo-700 duration-300 border-b-2 border-indigo-100 px-5 py-3"
+          >
+            All Category
+          </p>
+        </router-link>
       </div>
     </div>
     <div class="relative group py-2">
@@ -155,23 +162,14 @@
 import { ref } from "vue";
 import useCollection from "@/composible/useCollection";
 import useStorage from "@/composible/useStorage";
+import getCollections from "@/composible/getCollection";
 import { timestamp } from "@/firebase/config";
 export default {
   setup() {
     const files = ref(null);
     const fileError = ref(null);
+    const { documents: categories } = getCollections("inventory");
 
-    const categories = ref([
-      {
-        name: "Shoes",
-      },
-      {
-        name: "Shirt",
-      },
-      {
-        name: "Clothes",
-      },
-    ]);
     const type = ref[("image/png", "image/jpeg", "image/jpg", "image/svg")];
     const handleChanges = (e) => {
       const selected = e.target.files[0];
@@ -191,7 +189,6 @@ export default {
           files.value = null;
         }
       }
-
       console.log(e.target.files);
     };
 

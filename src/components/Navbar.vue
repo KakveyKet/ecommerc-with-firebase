@@ -1,11 +1,11 @@
 <template>
   <div class="p-5 bg-white flex items-center justify-between shadow space-x-5">
-    <div>
+    <router-link to="/">
       <img
         class="w-12 cursor-pointer object-cover"
         src="../assets/logoEcommerce.png"
       />
-    </div>
+    </router-link>
     <div class="flex w-full justify-end items-center space-x-5 text-indigo-700">
       <div class="cursor-pointer hover:text-indigo-900 duration-300">
         Category
