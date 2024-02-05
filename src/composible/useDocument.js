@@ -1,64 +1,79 @@
-import { projectFirestore } from "@/firebase/config";
-import { doc, setDoc, updateDoc, deleteDoc } from "@firebase/firestore";
-import { ref } from "vue";
+import { doc, setDoc, updateDoc, deleteDoc, collection } from 'firebase/firestore';
+import { projectFirestore } from '@/firebase/config';
+import { ref } from 'vue';
 
 const useDocument = (collectionName, id, subcollection) => {
     const error = ref(null);
     const isPending = ref(false);
     let documentRef;
-    const addDoc = async (name, data) => {
-        console.log("Name parameter:", name);
-        documentRef = doc(projectFirestore, collectionName, id, subcollection, name);
-        error.value = null;
-        isPending.value = true;
 
+    const addDoc = async (data) => {
         try {
+            console.log('Adding document with data:', data);
+
+            const collectionRef = collection(projectFirestore, collectionName, id, subcollection);
+            documentRef = doc(collectionRef);
+
+            isPending.value = true;
+
             const res = await setDoc(documentRef, data);
-            console.log("Document successfully added:", res);
-            isPending.value = false;
+
+            console.log('Document successfully added:', res);
             return res;
         } catch (err) {
-            console.error("Error adding document:", err);
+            console.error('Error adding document:', err);
             error.value = err.message;
+        } finally {
             isPending.value = false;
         }
     };
 
 
-
-    const updateDoc = async (docId, updates) => {
-        documentRef = doc(projectFirestore, collectionName, id, subcollection, docId);
-        error.value = null;
-        isPending.value = true;
-
+    const updateDocs = async (docId, updates) => {
         try {
+
+            const subcollectionRef = collection(projectFirestore, collectionName, id, subcollection);
+            documentRef = doc(subcollectionRef, docId);
+            error.value = null;
+            isPending.value = true;
+
             await updateDoc(documentRef, updates);
-            return { success: true }; // Indicate success
+
+            console.log('Document successfully updated');
+            return { success: true };
         } catch (err) {
+            console.error('Error updating document:', err);
             error.value = err.message;
-            return { success: false, error: err.message }; // Indicate failure with error message
+            return { success: false, error: err.message };
         } finally {
             isPending.value = false;
         }
     };
 
-    const deleteDoc = async (docId) => {
-        documentRef = doc(projectFirestore, collectionName, id, subcollection, docId);
-        error.value = null;
-        isPending.value = true;
 
+    const deleteDocs = async (docId) => {
         try {
+            const subcollectionRef = collection(projectFirestore, collectionName, id, subcollection);
+            documentRef = doc(subcollectionRef, docId);
+
+            error.value = null;
+            isPending.value = true;
+
             await deleteDoc(documentRef);
-            return { success: true }; // Indicate success
+
+            console.log('Document successfully deleted');
+            return { success: true };
         } catch (err) {
+            console.error('Error deleting document:', err);
             error.value = err.message;
-            return { success: false, error: err.message }; // Indicate failure with error message
+            return { success: false, error: err.message };
         } finally {
             isPending.value = false;
         }
     };
 
-    return { addDoc, updateDoc, deleteDoc, error, isPending };
+
+    return { addDoc, updateDocs, deleteDocs, error, isPending };
 };
 
 export default useDocument;

@@ -61,7 +61,7 @@
         <router-link
           v-for="category in categories"
           :key="category"
-          :to="{ name: 'categorydetails', params: { id: category.id } }"
+          :to="{ name: 'categorydetails', params: { id: category.name } }"
         >
           <p
             class="text-gray-400 hover:text-indigo-700 duration-300 border-b-2 border-indigo-100 px-5 py-3"

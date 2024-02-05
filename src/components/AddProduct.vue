@@ -7,8 +7,11 @@
 
       <div class="flex justify-between items-center p-2">
         <p>{{ name }}</p>
-        <span class="text-gray-700 font-bold font-mono">New Product </span
+        <span class="text-gray-700 font-bold font-mono">{{
+          product ? " Update Product" : "  New Product"
+        }}</span
         ><svg
+          @click="handleClose"
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
           viewBox="0 0 24 24"
@@ -35,7 +38,7 @@
 
           <input
             type="text"
-            v-model="descripion"
+            v-model="description"
             class="p-2 shadow w-full focus:outline-none focus:ring rounded text-gray-700 focus:ring-offset-2 ring-indigo-700"
             placeholder="Description"
           />
@@ -99,7 +102,7 @@
               {{ image.name }}
               <span>
                 <span
-                  @click="handleRomoveImage(index)"
+                  @click="handleRemoveImage(index)"
                   class="absolute -top-5 -left-2 text-red-600 hidden group-hover:block cursor-pointer"
                   ><svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -122,7 +125,7 @@
             v-if="true"
             class="p-2 w-full shadow rounded text-indigo-700 hover:bg-indigo-700 hover:text-white"
           >
-            Add
+            {{ product ? "Edit" : "Add" }}
           </button>
           <button
             v-else
@@ -142,14 +145,14 @@
 </template>
 
 <script>
-import { ref } from "vue";
-import useDocument from "@/composible/useDocument";
-import useStorage from "@/composible/useStorage";
+import { ref, onMounted } from "vue";
+import useDocument from "../composible/useDocument";
+import useStorage from "../composible/useStorage";
 export default {
-  props: ["name"],
-  setup(props) {
+  props: ["name", "product"],
+  setup(props, { emit }) {
     const productName = ref("");
-    const descripion = ref("");
+    const description = ref("");
     const price = ref("");
     const discount = ref("");
     const size = ref("");
@@ -157,13 +160,18 @@ export default {
     const images = ref([]);
     const files = ref([]);
     const { uploadImage, deleteImage, url } = useStorage();
-    const { addDoc, updateDoc, error, isPending, deleteDoc } = useDocument(
+    const { addDoc, error, isPending, deleteDocs, updateDocs } = useDocument(
       "inventory",
       props.name,
       "products"
     );
     const fileError = ref(null);
-    const type = ref[("image/png", "image/jpeg", "image/jpg", "image/svg")];
+    const allowedTypes = ["jpg", "png", "svg", "jpeg"];
+
+    onMounted(() => {
+      console.log(props.product);
+    });
+
     const handleChanges = (e) => {
       const selected = e.target.files[0];
       const limitedSize = 1024 * 1024; // 1MB
@@ -171,56 +179,80 @@ export default {
       if (selected.size > limitedSize) {
         fileError.value = "Size of the image is too large. It must be <= 1MB";
       } else {
-        const allowedTypes = ["jpg", "png", "svg", "jpeg"];
-
         if (selected && allowedTypes.includes(selected.type.split("/")[1])) {
           files.value.unshift(selected);
           images.value.unshift({
             name: selected.name,
           });
-          fileError.value = [];
+          fileError.value = null;
         } else {
           fileError.value =
             "Only files of type jpg, png, svg, jpeg are allowed";
           files.value = [];
         }
       }
-      console.log(e.target.files);
     };
-    const handleRomoveImage = (index) => {
+
+    const handleRemoveImage = (index) => {
       images.value.splice(index, 1);
       files.value.splice(index, 1);
     };
+
     const handleIsertSize = () => {
       sizes.value.push(size.value);
       size.value = "";
     };
+
     const handleRemoveSize = (index) => {
       sizes.value.splice(index, 1);
     };
+    const handleClose = () => {
+      emit("close");
+    };
+
+    //  component
     const addProduct = async () => {
       if (images.value.length > 0 && sizes.value.length > 0) {
         for (let i in files.value) {
           await uploadImage(files.value[i]);
-          images.value[i].url = url.value; // Corrected to access the url from useStorage
+          images.value[i].url = url.value;
+          emit("close");
         }
-
-        const newProduct = {
+        const product = {
           name: productName.value,
-          description: descripion.value,
+          description: description.value,
           price: Number(price.value).toFixed(2),
           discount: discount.value,
-          size: sizes.value,
+          sizes: sizes.value,
           images: images.value,
         };
 
-        await addDoc(newProduct);
+        if (props.product) {
+          await updateDocs(props.product?.id, product);
+          console.log(product);
+        } else {
+          console.log("newProduct:", product);
+          await addDoc(product);
+        }
+        if (!error.value) {
+          emit("close");
+        }
       }
     };
-
+    onMounted(() => {
+      if (props.product) {
+        productName.value = props.product.name;
+        description.value = props.product.description;
+        price.value = props.product.price;
+        discount.value = props.product.discount;
+        images.value = props.product.images;
+        sizes.value = props.product.sizes;
+        console.log("sizes", sizes.value);
+      }
+    });
     return {
       productName,
-      descripion,
+      description,
       price,
       discount,
       images,
@@ -229,10 +261,11 @@ export default {
       size,
       sizes,
       handleChanges,
-      handleRomoveImage,
+      handleRemoveImage,
       handleIsertSize,
       handleRemoveSize,
       addProduct,
+      handleClose,
     };
   },
 };
