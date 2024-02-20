@@ -1,14 +1,24 @@
 import { ref, onUnmounted } from "vue";
-import { collection, onSnapshot } from "firebase/firestore";
+import { collection, query, orderBy, onSnapshot, where } from "firebase/firestore";
 import { projectFirestore } from "@/firebase/config";
 
-const getCollections = (collectionName) => {
+const getCollections = (collectionName, date) => {
     const error = ref(null);
     const documents = ref([]);
     const isPending = ref(true);
-    const collectionRef = collection(projectFirestore, collectionName);
+
+    // Define the base query
+    let baseQuery = collection(projectFirestore, collectionName);
+
+    // If date is provided, apply date filters
+    if (date) {
+        baseQuery = query(baseQuery, orderBy("created_at", "desc"), where("created_at", ">=", date.from), where("created_at", "<=", date.to));
+    } else {
+        baseQuery = query(baseQuery, orderBy("created_at", "desc"));
+    }
+
     const unsubscribe = onSnapshot(
-        collectionRef,
+        baseQuery,
         (snapshot) => {
             const result = snapshot.docs.map((doc) => ({
                 id: doc.id,
@@ -25,6 +35,7 @@ const getCollections = (collectionName) => {
         }
     );
 
+    // Unsubscribe when component unmounts
     onUnmounted(() => {
         unsubscribe();
     });

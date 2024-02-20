@@ -6,7 +6,6 @@ import { projectFirestore } from "@/firebase/config";
 const useCollection = (collectionName) => {
     const error = ref(null);
     const isPending = ref(false);
-    const documentRef = ref(null);
 
     onMounted(() => {
         console.log("useCollection composible is mounted");
@@ -27,10 +26,8 @@ const useCollection = (collectionName) => {
         isPending.value = true;
 
         try {
-            const docRef = doc(projectFirestore, collectionName, category.name);
-            const res = await setDoc(docRef, category);
+            await addDoc(collection(projectFirestore, collectionName), category);
             isPending.value = false;
-            return res;
         } catch (err) {
             error.value = { code: err.code, message: err.message };
             isPending.value = false;
@@ -38,10 +35,10 @@ const useCollection = (collectionName) => {
     };
 
     const removeDocument = async (docID) => {
-        documentRef.value = doc(projectFirestore, collectionName, docID);
+        const documentRef = doc(projectFirestore, collectionName, docID);
         error.value = null;
         try {
-            await deleteDoc(documentRef.value);
+            await deleteDoc(documentRef);
         } catch (err) {
             error.value = { code: err.code, message: err.message };
         }

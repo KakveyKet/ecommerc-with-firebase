@@ -6,7 +6,11 @@
       </div>
     </div>
     <div class="mb-auto w-11/12 sm:w-full mx-auto">
-      <component :is="currentComponent" @close="currentComponent = ''" />
+      <component
+        :is="currentComponent"
+        @close="currentComponent = ''"
+        :categoriesID="categoriesID"
+      />
       <h1 class="text-md text-blue-700 ml-5 mt-2">Categories</h1>
       <div
         class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 mx-auto gap-5 m-5"
@@ -30,7 +34,7 @@
             {{ catagory.name }}
           </h4>
           <button
-            @click="handleRemoveCatgory"
+            @click="handleRemoveCatgory(catagory.id)"
             class="absolute bottom-0 right-0 text-pink-600 hover:text-pink-800 font-serif font-black"
           >
             Remove
@@ -63,13 +67,16 @@ export default {
   setup() {
     const { error, isPending, documents } = getCollections("inventory");
     const currentComponent = ref("");
-    const handleRemoveCatgory = () => {
+    const categoriesID = ref(null);
+    const handleRemoveCatgory = (cate) => {
       currentComponent.value = "DeleteConfirmation";
+      categoriesID.value = cate;
     };
     return {
       documents,
       currentComponent,
       handleRemoveCatgory,
+      categoriesID,
     };
   },
 };

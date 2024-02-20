@@ -12,7 +12,16 @@ const initializeAuthStateListener = () => {
         }
     });
 };
+// projectAuth.onAuthStateChanged(async (_user) => {
+//     if (_user) {
+//         const idTokenResult = await _user.getIdTokenResult();
+//         user.value = _user;
+//         user.value.admin = idTokenResult.claims.admin
 
+//     } else {
+//         user.value = null;
+//     }
+// })
 const getUser = () => {
     // Initialize the auth state listener when the composable is first used
     initializeAuthStateListener();

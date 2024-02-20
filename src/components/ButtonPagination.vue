@@ -1,5 +1,8 @@
 <template>
-  <div class="flex items-center gap-4 mx-auto">
+  <div
+    v-if="products && products.length > 0"
+    class="flex items-center gap-4 mx-auto"
+  >
     <button
       @click="handlePrevious"
       :class="{ frozen: previous <= 0 }"

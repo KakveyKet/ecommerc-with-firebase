@@ -1,3 +1,24 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer components {
+  .hideButton {
+    @apply hidden;
+  }
+  .activeSize {
+    @apply bg-indigo-800 text-white;
+  }
+  .activeImg {
+    @apply border-indigo-800 border-2;
+  }
+  .bg-odd {
+    @apply bg-white border-b-2 border-indigo-100;
+  }
+  .bg-even {
+    @apply bg-gray-100 border-b-2 border-indigo-100;
+  }
+  .activeLang {
+    @apply border-2 border-indigo-100;
+  }
+}

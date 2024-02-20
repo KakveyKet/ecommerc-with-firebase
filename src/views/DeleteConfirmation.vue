@@ -22,15 +22,16 @@
         </div>
         <div class="flex items-center font-bold text-gray-500 w-3/4 mx-auto">
           <p>
-            Are you seriously want to remove this
-            <span class="text-indiogo-700 font-black">Category</span> collection
-            ? Once you remove you won't be able to remove
+            Are you sure you want to remove this
+            <span class="text-indiogo-700 font-black">Category</span>
+            collection? Once removed, it cannot be undone.
           </p>
         </div>
         <div class="w-3/4 mx-auto mt-5 mb-3">
           <div class="flex justify-center">
             <button
-              v-if="true"
+              v-if="!Pending"
+              @click="handleRemove"
               class="py-2 px-12 bg-red-600 hover:bg-red-700 duration-300 rounded-md text-white tracking-wide"
             >
               Remove
@@ -48,26 +49,86 @@
             </button>
           </div>
         </div>
-        <di class="flex justify-center">
+        <div class="flex justify-center">
           <div
             @click="handleCancel"
             class="text-gray-700 font-semibold tracking-wide hover:text-gray-900 cursor-pointer"
           >
             Cancel
           </div>
-        </di>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script>
+import { ref } from "vue";
+import useDocument from "@/composible/useDocument";
+import getUser from "@/composible/getUser";
+import getDocument from "@/composible/getDocument";
+import useCollection from "@/composible/useCollection";
+import useStorage from "@/composible/useStorage";
+
 export default {
+  props: ["categoriesID"],
   setup(props, { emit }) {
+    const Pending = ref(null);
+    const { deleteDocs: removeProduct } = useDocument(
+      "inventory",
+      props.categoriesID.name,
+      "products"
+    );
+    const { deleteDocs: removeCart } = useDocument("carts", user?.uid, "items");
+    const { removeDocument: removeCollection } = useCollection(
+      "inventory",
+      props.categoriesID.name,
+      "products"
+    );
+    const { user } = getUser();
+    const { documents: products } = getDocument(
+      "inventory",
+      props.categoriesID.name,
+      "products"
+    );
+    const { deleteImage } = useStorage();
+
     const handleCancel = () => {
       emit("close");
     };
-    return { handleCancel };
+
+    const handleRemove = async () => {
+      const productsID = [];
+      const cartsID = [];
+
+      products.value.forEach((product) => {
+        carts.value?.forEach((cart) => {
+          if (cart.id == product.id) {
+            cartsID.push(cart.id);
+          }
+        });
+        productsID.push(product.id);
+      });
+
+      if (cartsID.length > 0) {
+        for (let id of cartsID) {
+          await removeCart(id);
+        }
+      }
+
+      if (productsID.length > 0) {
+        for (let id of productsID) {
+          await removeProduct(id);
+        }
+      }
+
+      await deleteImage(props.categoriesID?.url);
+      await removeCollection(props.categoriesID?.id);
+      Pending.value = false;
+      handleCancel();
+    };
+
+    return { handleCancel, removeProduct, handleRemove };
   },
 };
 </script>

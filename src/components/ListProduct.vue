@@ -1,6 +1,14 @@
 <template>
   <div>
-    <h1>List Product</h1>
+    <div>
+      <div v-if="textSearch" class="my-5 text-gray-700 font-semibold">
+        {{ documents?.lenght }} result for {{ textSearch }}
+        <span class="text-indigo-700 font-bold text-2xl"
+          >{{ name }}
+          product
+        </span>
+      </div>
+    </div>
     <div
       class="fixed -top-30 lg:right-10 text-indigo-700 bg-indigo-50 rounded-full hover:bg-indigo-800 hover:text-white duration-300 p-1 cursor-pointer"
     >
@@ -91,6 +99,7 @@
 
             <div>
               <button
+                @click="handleAddToCard(item)"
                 class="w-9 h-9 rounded-full border-2 border-gray-200 flex justify-center items-center bg-indigo-50"
               >
                 <svg
@@ -137,6 +146,9 @@ import getDocument from "@/composible/getDocument";
 import DeleteConfirmation from "@/views/DeleteConfirmation.vue";
 import DeleteProductConfirmation from "@/views/DeleteProductConfirmation.vue";
 import ButtonPagination from "./ButtonPagination.vue";
+import getUser from "@/composible/getUser";
+import useDocument from "@/composible/useDocument";
+import { timestamp } from "@/firebase/config";
 export default {
   components: {
     AddProduct,
@@ -144,7 +156,7 @@ export default {
     DeleteProductConfirmation,
     ButtonPagination,
   },
-  props: ["name", "product"],
+  props: ["name", "product", "textSearch"],
   setup(props) {
     const currrentComponent = ref("");
     const mountComponent = (component) => {
@@ -156,7 +168,7 @@ export default {
       props.name,
       "products"
     );
-
+    const { user } = getUser();
     const unmountComponent = () => {
       currrentComponent.value = "";
       product.value = null;
@@ -171,11 +183,29 @@ export default {
       mountComponent("DeleteProductConfirmation");
       product.value = item;
     };
+    const { addDoc } = useDocument("carts", props.name, "items");
     const previous = ref(0);
     const next = ref(5);
     const handleListentoPagination = (pre, ntx) => {
       previous.value = pre;
       next.value = ntx;
+    };
+    const handleAddToCard = async (product) => {
+      if (!user.value) {
+        router.push({ name: "signin" });
+      }
+
+      const item = {
+        name: product.name,
+        price: product.price,
+        discount: product.discount,
+        description: product.description,
+        sizes: product.sizes,
+        images: product.images,
+        createdAt: timestamp(),
+      };
+
+      await addDoc(item);
     };
     return {
       currrentComponent,
@@ -189,6 +219,7 @@ export default {
       handleListentoPagination,
       previous,
       next,
+      handleAddToCard,
     };
   },
 };

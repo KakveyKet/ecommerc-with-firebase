@@ -13,11 +13,8 @@ const useDocument = (collectionName, id, subcollection) => {
 
             const collectionRef = collection(projectFirestore, collectionName, id, subcollection);
             documentRef = doc(collectionRef);
-
             isPending.value = true;
-
             const res = await setDoc(documentRef, data);
-
             console.log('Document successfully added:', res);
             return res;
         } catch (err) {
@@ -28,10 +25,8 @@ const useDocument = (collectionName, id, subcollection) => {
         }
     };
 
-
     const updateDocs = async (docId, updates) => {
         try {
-
             const subcollectionRef = collection(projectFirestore, collectionName, id, subcollection);
             documentRef = doc(subcollectionRef, docId);
             error.value = null;
@@ -49,7 +44,6 @@ const useDocument = (collectionName, id, subcollection) => {
             isPending.value = false;
         }
     };
-
 
     const deleteDocs = async (docId) => {
         try {
@@ -71,7 +65,6 @@ const useDocument = (collectionName, id, subcollection) => {
             isPending.value = false;
         }
     };
-
 
     return { addDoc, updateDocs, deleteDocs, error, isPending };
 };

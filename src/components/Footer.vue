@@ -1,5 +1,7 @@
 <template>
-  <div class="grid grid-cols-2 p-5 bg-white h-auto lg:grid-cols-4 shadow-lg">
+  <div
+    class="grid grid-cols-2 p-5 bg-white text-xs sm:text-base h-auto lg:grid-cols-4 shadow-lg"
+  >
     <div class="lg:border-r-2 border-gray-200 lg:mr-5">
       <h3 class="font-semibold mb-3 text-gray-700">Customer Services</h3>
       <ul class="text-gray-500 font-thin">

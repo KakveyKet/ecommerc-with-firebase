@@ -1,19 +1,31 @@
-/**
- * Import function triggers from their respective submodules:
- *
- * const {onCall} = require("firebase-functions/v2/https");
- * const {onDocumentWritten} = require("firebase-functions/v2/firestore");
- *
- * See a full list of supported triggers at https://firebase.google.com/docs/functions
- */
+const functions = require("firebase-functions");
+const admin = require("firebase-admin");
 
-const {onRequest} = require("firebase-functions/v2/https");
-const logger = require("firebase-functions/logger");
+admin.initializeApp();
 
-// Create and deploy your first functions
-// https://firebase.google.com/docs/functions/get-started
+exports.addAdminRole = functions.https.onCall(async (data, context) => {
+    // Check if the request is authenticated and has the necessary permissions
+    if (!context.auth || !context.auth.token.admin) {
+        throw new functions.https.HttpsError(
+            'unauthenticated',
+            'Only admins can add other admins.'
+        );
+    }
 
-// exports.helloWorld = onRequest((request, response) => {
-//   logger.info("Hello logs!", {structuredData: true});
-//   response.send("Hello from Firebase!");
-// });
+    // Get the email address from the data object
+    const email = data.email;
+
+    try {
+        // Fetch the user by email
+        const userRecord = await admin.auth().getUserByEmail(email);
+
+        // Set custom claims to grant admin privileges
+        await admin.auth().setCustomUserClaims(userRecord.uid, { admin: true });
+
+        // Return a success message
+        return { message: `${email} has been added as admin` };
+    } catch (error) {
+        // Handle errorsfirebs
+        throw new functions.https.HttpsError('internal', error.message);
+    }
+});

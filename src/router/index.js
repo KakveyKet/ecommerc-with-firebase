@@ -1,9 +1,15 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
+
 import SignUpVue from '@/views/SignUp.vue'
 import SigninVue from '@/views/Signin.vue'
+
 import CategoriesVue from '@/views/Categories.vue'
 import CategoryDetailVue from '@/views/CategoryDetail.vue'
+import CardDetailVue from '@/views/CardDetail.vue'
+import CheckOutOrderVue from '@/views/CheckOutOrder.vue'
+
+import Report from "../views/Report.vue"
 const routes = [
   {
     path: '/',
@@ -31,7 +37,21 @@ const routes = [
     component: CategoryDetailVue,
     props: true
   },
-
+  {
+    path: '/cart-details',
+    name: 'card-deails',
+    component: CardDetailVue,
+  },
+  {
+    path: '/order/checkoutorder',
+    name: 'checkoutorder',
+    component: CheckOutOrderVue
+  },
+  {
+    path: '/report',
+    name: 'report',
+    component: Report
+  }
 ]
 
 const router = createRouter({

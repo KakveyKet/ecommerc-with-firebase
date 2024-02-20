@@ -20,7 +20,7 @@
             />
           </svg>
         </span>
-        <span>Categories</span>
+        <span> {{ $t("Categoris") }}</span>
 
         <span class="group-hover:hidden">
           <svg
@@ -80,7 +80,7 @@
       </div>
     </div>
     <div class="relative group py-2">
-      <span>Add Category</span>
+      <span>{{ $t("Add Category") }}</span>
       <!-- add catagory -->
 
       <div
@@ -122,14 +122,16 @@
       </div>
     </div>
     <div class="relative group py-2">
-      <span>Promote Admin</span>
+      <span>{{ $t("Promote Admins") }}</span>
       <!-- promote admin -->
 
       <div
-        class="absolute hidden -right-20 group-hover:block bg-white w-96 top-10 shadow-xl hover:shadow-sm h-auto"
+        class="absolute hidden text-black -right-20 z-40 group-hover:block bg-white w-96 top-10 shadow-xl hover:shadow-sm h-auto"
       >
-        <form class="px-5 py-4 space-y-4">
+        <form @submit.prevent="handleAddAdmin" class="px-5 py-4 space-y-4">
           <input
+            v-model="email"
+            required
             type="email"
             placeholder="Email"
             class="p-2 w-full focus:ouline-none focus:ring-offset-2 focus:ring-indigo-700 shadow"
@@ -154,7 +156,7 @@
         </form>
       </div>
     </div>
-    <div>Report</div>
+    <router-link to="/report">{{ $t("Reports") }}</router-link>
   </div>
 </template>
 
@@ -164,12 +166,14 @@ import useCollection from "@/composible/useCollection";
 import useStorage from "@/composible/useStorage";
 import getCollections from "@/composible/getCollection";
 import { timestamp } from "@/firebase/config";
+import { functions } from "../firebase/config";
+import getUser from "@/composible/getUser";
 export default {
   setup() {
     const files = ref(null);
     const fileError = ref(null);
     const { documents: categories } = getCollections("inventory");
-
+    const { user } = getUser();
     const type = ref[("image/png", "image/jpeg", "image/jpg", "image/svg")];
     const handleChanges = (e) => {
       const selected = e.target.files[0];
@@ -205,13 +209,23 @@ export default {
         });
       }
     };
-
+    const email = ref("");
+    const handleAddAdmin = async () => {
+      const addAdmin = functions.httpsCollable("addAdminRole");
+      const result = await addAdmin({ email: email.value });
+      console.log("====================================");
+      console.log(result);
+      console.log("====================================");
+    };
     return {
       categories,
       handleChanges,
       fileError,
       handleAddCategory,
       categoryName,
+      handleAddAdmin,
+      email,
+      user,
     };
   },
 };

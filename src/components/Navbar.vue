@@ -12,6 +12,7 @@
       </div>
       <div v-if="windowWidth < 640">
         <svg
+          @click="handlePopUpSearch"
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 24 24"
           fill="currentColor"
@@ -40,9 +41,37 @@
         <input
           type="text"
           placeholder="Searching..."
+          v-model="textSearch"
+          @keypress.enter="handleSearch"
           class="focus:outline-none p-1 pl-10 w-full ring ring-offset-2 ring-indigo-700 rounded-full"
         />
       </div>
+
+      <!-- checkout order -->
+      <router-link :to="{ name: 'checkoutorder' }" class="relative">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          class="w-6 h-6"
+        >
+          <path
+            d="M5.85 3.5a.75.75 0 0 0-1.117-1 9.719 9.719 0 0 0-2.348 4.876.75.75 0 0 0 1.479.248A8.219 8.219 0 0 1 5.85 3.5ZM19.267 2.5a.75.75 0 1 0-1.118 1 8.22 8.22 0 0 1 1.987 4.124.75.75 0 0 0 1.48-.248A9.72 9.72 0 0 0 19.266 2.5Z"
+          />
+          <path
+            fill-rule="evenodd"
+            d="M12 2.25A6.75 6.75 0 0 0 5.25 9v.75a8.217 8.217 0 0 1-2.119 5.52.75.75 0 0 0 .298 1.206c1.544.57 3.16.99 4.831 1.243a3.75 3.75 0 1 0 7.48 0 24.583 24.583 0 0 0 4.83-1.244.75.75 0 0 0 .298-1.205 8.217 8.217 0 0 1-2.118-5.52V9A6.75 6.75 0 0 0 12 2.25ZM9.75 18c0-.034 0-.067.002-.1a25.05 25.05 0 0 0 4.496 0l.002.1a2.25 2.25 0 1 1-4.5 0Z"
+            clip-rule="evenodd"
+          />
+        </svg>
+
+        <span
+          v-if="orders?.length > 0"
+          class="absolute w-4 h-4 text-xs text-white flex items-center justify-center -top-2 -right-1 bg-pink-600 rounded-full"
+          >{{ orders?.length }}
+        </span>
+        <div v-else>0</div>
+      </router-link>
       <div v-if="!user">
         <router-link :to="{ name: 'signin' }">
           <svg
@@ -63,6 +92,7 @@
       <div class="flex items-center space-x-2" v-else>
         <div>
           <svg
+            @click="handlePopUpLang"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
@@ -77,7 +107,7 @@
             />
           </svg>
         </div>
-        <div>
+        <router-link to="/cart-details" class="relative">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
@@ -92,7 +122,13 @@
               d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 0 0-16.536-1.84M7.5 14.25 5.106 5.272M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z"
             />
           </svg>
-        </div>
+          <span
+            v-if="items.length > 0"
+            class="absolute w-4 h-4 text-xs text-white flex items-center justify-center -top-2 -right-1 bg-pink-600 rounded-full"
+            >{{ items.length }}
+          </span>
+          <div v-else>0</div>
+        </router-link>
         <div>
           <div
             class="relative group w-7 h-7 text-white text-sm bg-indigo-700 hover:bg-indigo-900 duration-300 rounded-full flex justify-center items-center"
@@ -147,6 +183,7 @@
       </div>
     </div>
   </div>
+  <component :is="currentComponet" @close="currentComponet = ''" />
   <SubNavBar />
 </template>
 
@@ -155,15 +192,31 @@ import { ref, onMounted } from "vue";
 import getUser from "../composible/getUser";
 import { projectAuth } from "@/firebase/config";
 import { useRouter } from "vue-router";
+import getDocument from "@/composible/getDocument";
+import getCollections from "@/composible/getCollection";
 import SubNavBar from "./SubNavBar.vue";
+import PopupSearch from "./PopupSearch.vue";
+import SwitchingLang from "./SwitchingLang.vue";
 export default {
   components: {
     SubNavBar,
+    PopupSearch,
+    SwitchingLang,
   },
+  props: ["textSearch"],
   setup() {
     const { user } = getUser();
+    const { error, documents: items } = getDocument(
+      "carts",
+      user.value?.uid,
+      "items"
+    );
+    const currentComponet = ref("");
     const windowWidth = ref(window.innerWidth);
     const router = useRouter();
+    const { documents: categories } = getCollections("inventory");
+    const { documents: orders } = getCollections("orders");
+
     const handleSignOut = async () => {
       await projectAuth.signOut();
       router.push({ name: "signin" });
@@ -174,11 +227,46 @@ export default {
     onMounted(() => {
       window.addEventListener("resize", onResize);
     });
+    const textSearch = ref("");
+    const handleSearch = () => {
+      if (!textSearch.value) {
+        router.push({ name: "home" });
+      } else {
+        let categoryName;
+        categories.value.forEach((category) => {
+          if (category.name.toLowerCase().includes(textSearch.value)) {
+            categoryName = category.name;
+          }
+        });
 
+        if (categoryName) {
+          router.push({
+            name: "categorydetails",
+            params: { id: categoryName, textSearch: textSearch.value },
+          });
+        } else {
+          console.error("categoryName is missing or empty");
+        }
+      }
+    };
+
+    const handlePopUpSearch = () => {
+      currentComponet.value = "PopupSearch";
+    };
+    const handlePopUpLang = () => {
+      currentComponet.value = "SwitchingLang";
+    };
     return {
       windowWidth,
       user,
       handleSignOut,
+      items,
+      handleSearch,
+      textSearch,
+      currentComponet,
+      handlePopUpSearch,
+      orders,
+      handlePopUpLang,
     };
   },
 };
